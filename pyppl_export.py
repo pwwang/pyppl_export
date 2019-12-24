@@ -72,6 +72,11 @@ def job_done(job, status):
 
 	files2ex  = set(files2ex)
 	for file2ex in files2ex:
+		# don't export if file2ex does not exist
+		# it might be a dead link
+		# then job should fail
+		if not file2ex.exists():
+			return
 		# exported file
 		exfile = job.proc.plugin_config.export_dir.joinpath(file2ex.name)
 		if job.proc.plugin_config.export_how in EX_GZIP:
