@@ -27,10 +27,10 @@ def logger_init(logger):
 
 @hookimpl
 def setup(config):
-	config.plugin_config.export_dir  = None
-	config.plugin_config.export_how  = EX_MOVE[0]
-	config.plugin_config.export_part = ''
-	config.plugin_config.export_ow   = True
+	config.config.export_dir  = None
+	config.config.export_how  = EX_MOVE[0]
+	config.config.export_part = ''
+	config.config.export_ow   = True
 
 @hookimpl
 def proc_init(proc):
@@ -43,27 +43,27 @@ def proc_init(proc):
 
 @hookimpl
 def proc_prerun(proc):
-	if proc.plugin_config.export_dir:
-		proc.plugin_config.export_dir.mkdir(exist_ok = True, parents = True)
+	if proc.config.export_dir:
+		proc.config.export_dir.mkdir(exist_ok = True, parents = True)
 
 @hookimpl
 def job_done(job, status):
 	"""Export the output if job succeeded"""
-	if status == 'failed' or not job.proc.plugin_config.export_dir:
+	if status == 'failed' or not job.proc.config.export_dir:
 		return
 
 	# output files to export
 	files2ex = []
 	# no partial export
-	if not job.proc.plugin_config.export_part or (
-		len(job.proc.plugin_config.export_part) == 1 and \
-		not job.proc.plugin_config.export_part[0].render(job.data)):
+	if not job.proc.config.export_part or (
+		len(job.proc.config.export_part) == 1 and \
+		not job.proc.config.export_part[0].render(job.data)):
 
 		files2ex.extend(Path(outdata)
 			for outtype, outdata in job.output.values()
 			if outtype not in OUT_VARTYPE)
 	else:
-		for expart in job.proc.plugin_config.export_part:
+		for expart in job.proc.config.export_part:
 			expart = expart.render(job.data)
 			if expart in job.output:
 				files2ex.append(Path(job.output[expart][1]))
@@ -78,8 +78,8 @@ def job_done(job, status):
 		if not file2ex.exists():
 			return
 		# exported file
-		exfile = job.proc.plugin_config.export_dir.joinpath(file2ex.name)
-		if job.proc.plugin_config.export_how in EX_GZIP:
+		exfile = job.proc.config.export_dir.joinpath(file2ex.name)
+		if job.proc.config.export_how in EX_GZIP:
 			exfile = exfile.with_suffix(exfile.suffix + '.tgz') \
 				if fs.isdir(file2ex) \
 				else exfile.with_suffix(exfile.suffix + '.gz')
@@ -88,17 +88,17 @@ def job_done(job, status):
 			continue
 
 		with fs.lock(file2ex, exfile):
-			if job.proc.plugin_config.export_how in EX_GZIP:
-				fs.gzip(file2ex, exfile, overwrite = job.proc.plugin_config.export_ow)
-			elif job.proc.plugin_config.export_how in EX_COPY:
-				fs.copy(file2ex, exfile, overwrite = job.proc.plugin_config.export_ow)
-			elif job.proc.plugin_config.export_how in EX_LINK:
-				fs.link(file2ex, exfile, overwrite = job.proc.plugin_config.export_ow)
+			if job.proc.config.export_how in EX_GZIP:
+				fs.gzip(file2ex, exfile, overwrite = job.proc.config.export_ow)
+			elif job.proc.config.export_how in EX_COPY:
+				fs.copy(file2ex, exfile, overwrite = job.proc.config.export_ow)
+			elif job.proc.config.export_how in EX_LINK:
+				fs.link(file2ex, exfile, overwrite = job.proc.config.export_ow)
 			else: # move
 				if fs.islink(file2ex):
-					fs.copy(file2ex, exfile, overwrite = job.proc.plugin_config.export_ow)
+					fs.copy(file2ex, exfile, overwrite = job.proc.config.export_ow)
 				else:
-					fs.move(file2ex, exfile, overwrite = job.proc.plugin_config.export_ow)
+					fs.move(file2ex, exfile, overwrite = job.proc.config.export_ow)
 					fs.link(exfile, file2ex)
 
 		job.logger('Exported: %s' % exfile,	level = 'EXPORT')
@@ -109,12 +109,12 @@ def job_prebuild(job):
 	if job.proc.cache != 'export':
 		return
 
-	if job.proc.plugin_config.export_how in EX_LINK:
+	if job.proc.config.export_how in EX_LINK:
 		job.logger("Job is not export-cached using symlink export.",
 			slevel = "EXPORT_CACHE_USING_SYMLINK", level = "warning")
 		return
-	if job.proc.plugin_config.export_part and \
-		job.proc.plugin_config.export_part[0].render(job.data):
+	if job.proc.config.export_part and \
+		job.proc.config.export_part[0].render(job.data):
 
 		job.logger("Job is not export-cached using partial export.",
 			slevel = "EXPORT_CACHE_USING_EXPARTIAL", level = "warning")
@@ -123,9 +123,9 @@ def job_prebuild(job):
 	for outtype, outdata in job.output.values():
 		if outtype in OUT_VARTYPE:
 			continue
-		exfile = job.proc.plugin_config.export_dir / outdata.name
+		exfile = job.proc.config.export_dir / outdata.name
 
-		if job.proc.plugin_config.export_how in EX_GZIP:
+		if job.proc.config.export_how in EX_GZIP:
 			exfile = exfile.with_suffix(exfile.suffix + '.tgz') \
 				if fs.isdir(outdata) or outtype in OUT_DIRTYPE \
 				else exfile.with_suffix(exfile.suffix + '.gz')
