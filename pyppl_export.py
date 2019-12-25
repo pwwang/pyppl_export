@@ -34,6 +34,12 @@ def setup(config):
 
 @hookimpl
 def proc_init(proc):
+	def export_part_converter(part):
+		parts = [] if not part else always_list(part)
+		for i, part in enumerate(parts):
+			parts[i] = proc.template(part, **proc.envs)
+		return parts
+
 	proc.add_config('export_dir',
 		converter = lambda exdir: None if not exdir else Path(exdir))
 	proc.add_config('export_how')
