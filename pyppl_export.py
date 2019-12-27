@@ -4,6 +4,7 @@ Features:
 2. export partial output to a directory
 3. resume process from export directory
 """
+from functools import partial
 from pathlib import Path
 from pyppl.plugin import hookimpl
 from pyppl.utils import always_list, fs
@@ -18,6 +19,7 @@ EX_LINK = ('link', 'symlink', 'symbol')
 
 @hookimpl
 def logger_init(logger):
+	"""Add log levels"""
 	logger.add_level('EXPORT')
 	logger.add_sublevel('CACHED_FROM_EXPORT', -1)
 	logger.add_sublevel('EXPORT_CACHE_USING_SYMLINK', -1)
@@ -27,33 +29,37 @@ def logger_init(logger):
 
 @hookimpl
 def setup(config):
+	"""Add default configuration"""
 	config.config.export_dir  = None
 	config.config.export_how  = EX_MOVE[0]
 	config.config.export_part = ''
 	config.config.export_ow   = True
 
+def export_part_converter(part, proc):
+	"""Export_part converter"""
+	parts = [] if not part else always_list(part)
+	for i, prt in enumerate(parts):
+		parts[i] = proc.template(prt, **proc.envs)
+	return parts
+
 @hookimpl
 def proc_init(proc):
-	def export_part_converter(part):
-		parts = [] if not part else always_list(part)
-		for i, part in enumerate(parts):
-			parts[i] = proc.template(part, **proc.envs)
-		return parts
-
+	"""Add configs"""
 	proc.add_config('export_dir',
 		converter = lambda exdir: None if not exdir else Path(exdir))
 	proc.add_config('export_how')
 	proc.add_config('export_part',
-		converter = lambda expart: [] if not expart else always_list(expart))
+		converter = partial(export_part_converter, proc = proc))
 	proc.add_config('export_ow', default = True)
 
 @hookimpl
 def proc_prerun(proc):
+	"""Create export directory"""
 	if proc.config.export_dir:
 		proc.config.export_dir.mkdir(exist_ok = True, parents = True)
 
 @hookimpl
-def job_done(job, status):
+def job_done(job, status): # pylint: disable=too-many-branches
 	"""Export the output if job succeeded"""
 	if status == 'failed' or not job.proc.config.export_dir:
 		return
@@ -105,14 +111,14 @@ def job_done(job, status):
 					fs.copy(file2ex, exfile, overwrite = job.proc.config.export_ow)
 				else:
 					fs.move(file2ex, exfile, overwrite = job.proc.config.export_ow)
-					fs.link(exfile, file2ex)
+					fs.link(exfile.resolve(), file2ex)
 
 		job.logger('Exported: %s' % exfile,	level = 'EXPORT')
 
 @hookimpl
 def job_prebuild(job):
 	"""See if we can extract output from export directory"""
-	if job.proc.cache != 'export':
+	if job.proc.cache != 'export' or not job.proc.config.export_dir:
 		return
 
 	if job.proc.config.export_how in EX_LINK:
@@ -136,6 +142,7 @@ def job_prebuild(job):
 				if fs.isdir(outdata) or outtype in OUT_DIRTYPE \
 				else exfile.with_suffix(exfile.suffix + '.gz')
 			with fs.lock(exfile, outdata):
+				print(exfile)
 				if not fs.exists(exfile):
 					job.logger(
 						"Job is not export-cached since exported file not exists: %s" %
