@@ -17,6 +17,22 @@ PyPPL(config_export_dir = './export', config_export_part = 'outfile1')
 # export output with .txt files only
 PyPPL(config_export_dir = './export', config_export_part = '*.txt')
 
+# export output with output key "outfile"
+PyPPL(config_export_dir = './export', config_export_part = 'outfile')
+# Use proc and job data to select
+PyPPL(config_export_dir = './export', config_export_part = '*.{{args.ext}}')
+
 # use export directory to make cache job cached
 PyPPL(config_export_dir = './export', cache = 'export')
+
+# copy the output to export directory
+PyPPL(config_export_dir = './export', config_export_how = 'copy')
+# move, but keep symblic links in the output directory
+PyPPL(config_export_dir = './export', config_export_how = 'move')
+# gzip single file and tar-gzip the directory
+PyPPL(config_export_dir = './export', config_export_how = 'gz')
+# Just create symblic links in export directory
+PyPPL(config_export_dir = './export', config_export_how = 'link')
+# Don't overwrite existing files
+PyPPL(config_export_dir = './export', config_export_ow = False)
 ```
