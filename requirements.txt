@@ -1,1 +1,3 @@
 pyppl
+pytest
+pytest-cov
