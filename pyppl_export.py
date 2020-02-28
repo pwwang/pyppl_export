@@ -189,6 +189,6 @@ def job_prebuild(job):
                                "export-caching: %s" % outdata,
                                slevel="EXPORT_CACHE_OUTFILE_EXISTS",
                                level="warning")
-                fs.link(exfile, outdata)
+                fs.link(exfile.resolve(), outdata)
     job.rc = 0
     job.cache()
