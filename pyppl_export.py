@@ -125,7 +125,7 @@ def job_done(job, status):  # pylint: disable=too-many-branches
                             overwrite=job.proc.config.export_ow)
                     fs.link(exfile.resolve(), file2ex)
 
-        job.logger('Exported: %s' % exfile, level='EXPORT')
+        job.logger('Exported: %s' % exfile, level='EXPORT', plugin='export')
 
 
 @hookimpl
@@ -137,14 +137,16 @@ def job_prebuild(job):
     if job.proc.config.export_how in EX_LINK:
         job.logger("Job is not export-cached using symlink export.",
                    slevel="EXPORT_CACHE_USING_SYMLINK",
-                   level="warning")
+                   level="warning",
+                   plugin="export")
         return
     if job.proc.config.export_part and \
         job.proc.config.export_part[0].render(job.data):
 
         job.logger("Job is not export-cached using partial export.",
                    slevel="EXPORT_CACHE_USING_EXPARTIAL",
-                   level="warning")
+                   level="warning",
+                   plugin="export")
         return
 
     for outtype, outdata in job.output.values():
@@ -162,7 +164,8 @@ def job_prebuild(job):
                         "Job is not export-cached since exported "
                         "file not exists: %s" % exfile,
                         slevel="EXPORT_CACHE_EXFILE_NOTEXISTS",
-                        level="debug"
+                        level="debug",
+                        plugin="export"
                     )
                     return
 
@@ -170,7 +173,8 @@ def job_prebuild(job):
                     job.logger('Overwrite file for export-caching: %s' %
                                outdata,
                                slevel="EXPORT_CACHE_OUTFILE_EXISTS",
-                               level="warning")
+                               level="warning",
+                               plugin="export")
                 fs.gunzip(exfile, outdata)
         else:  # exhow not gzip
             with fs.lock(exfile, outdata):
@@ -179,7 +183,8 @@ def job_prebuild(job):
                         "Job is not export-cached since "
                         "exported file not exists: %s" % exfile,
                         slevel="EXPORT_CACHE_EXFILE_NOTEXISTS",
-                        level="debug"
+                        level="debug",
+                        plugin="export"
                     )
                     return
                 if fs.samefile(exfile, outdata):
@@ -188,7 +193,8 @@ def job_prebuild(job):
                     job.logger("Overwrite file for "
                                "export-caching: %s" % outdata,
                                slevel="EXPORT_CACHE_OUTFILE_EXISTS",
-                               level="warning")
+                               level="warning",
+                               plugin="export")
                 fs.link(exfile.resolve(), outdata)
     job.rc = 0
     job.cache()
