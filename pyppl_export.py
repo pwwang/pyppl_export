@@ -10,7 +10,7 @@ from pyppl.plugin import hookimpl
 from pyppl.utils import always_list, fs
 from pyppl._proc import OUT_VARTYPE, OUT_DIRTYPE
 
-__version__ = "0.0.4"
+__version__ = "0.0.5"
 
 EX_GZIP = ('gzip', 'gz')
 EX_COPY = ('copy', 'cp')
