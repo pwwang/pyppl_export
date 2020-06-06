@@ -11,7 +11,7 @@ from pyppl.config import config
 from pyppl.utils import always_list, fs
 from pyppl._proc import OUT_VARTYPE, OUT_DIRTYPE
 
-__version__ = "0.0.5"
+__version__ = "0.0.6"
 
 EX_GZIP = ('gzip', 'gz')
 EX_COPY = ('copy', 'cp')
