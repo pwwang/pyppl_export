@@ -4,12 +4,8 @@ from pyppl import Proc
 from pyppl.job import Job
 from pyppl.utils import fs
 from pyppl.logger import logger
-from pyppl_export import job_done, logger_init, setup as pe_setup, proc_prerun, job_prebuild
+from pyppl_export import job_done, logger_init, proc_prerun, job_prebuild
 from pyppl.config import config
-
-def setup_module(module):
-    pe_setup(config)
-    logger_init(logger)
 
 @pytest.fixture
 def job0(tmp_path, request):

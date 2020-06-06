@@ -7,6 +7,7 @@ Features:
 from functools import partial
 from pathlib import Path
 from pyppl.plugin import hookimpl
+from pyppl.config import config
 from pyppl.utils import always_list, fs
 from pyppl._proc import OUT_VARTYPE, OUT_DIRTYPE
 
@@ -17,6 +18,10 @@ EX_COPY = ('copy', 'cp')
 EX_MOVE = ('move', 'mv')
 EX_LINK = ('link', 'symlink', 'symbol')
 
+config.config.export_dir = None
+config.config.export_how = EX_MOVE[0]
+config.config.export_part = ''
+config.config.export_ow = True
 
 @hookimpl
 def logger_init(logger):
@@ -27,15 +32,6 @@ def logger_init(logger):
     logger.add_sublevel('EXPORT_CACHE_USING_EXPARTIAL', -1)
     logger.add_sublevel('EXPORT_CACHE_EXFILE_NOTEXISTS', -1)
     logger.add_sublevel('EXPORT_CACHE_OUTFILE_EXISTS', -1)
-
-
-@hookimpl
-def setup(config):
-    """Add default configuration"""
-    config.config.export_dir = None
-    config.config.export_how = EX_MOVE[0]
-    config.config.export_part = ''
-    config.config.export_ow = True
 
 
 def export_part_converter(part, proc):
